@@ -44,7 +44,7 @@ class DownloadService {
     try {
       const type = $("#downloadType").val();
       const groupedByType = this.groupDataByType(type);
-      await this.createAndPopulateExcelSheets(groupedByType);
+      await this.createAndPopulateExcelSheets(groupedByType,false);
     } catch (error) {
       console.error(error);
       alert("Failed to download files. See console for details.");
@@ -93,86 +93,101 @@ class DownloadService {
     });
   }
 
-  async createAndPopulateExcelSheets(groupedByType) {
-    const zip = new JSZip();
-
-    for (const [type, typeData] of Object.entries(groupedByType)) {
-      const workbook = new ExcelJS.Workbook();
-      const parentFolderColumn = $("#parentFolder").val();
-      const parentFolder = typeData && typeData[0] && typeData[0][parentFolderColumn];
-      const worksheet = workbook.addWorksheet("Data");
-      let headers = $("#selectColumns").val();
-      let selectedValue = $("#selectColumns").val();
-      if (selectedValue.includes("All")) {
-        headers = [];
-        $("#selectColumns option:not([value='All'])").each(function () {
-          headers.push(this.value);
-        });
+  async createAndPopulateExcelSheets(groupedByType, separateFiles) {
+      const zip = new JSZip();
+      let workbook;
+      if (!separateFiles) {
+          workbook = new ExcelJS.Workbook();
       }
-      headers = $.map(headers, function (key) {
-        var obj = $.grep(StorageService.currentRecord.headers, function (o) {
-          return o.data === key;
-        })[0];
-        return obj ? obj : null;
-      });
 
-      worksheet.columns = headers.map((header) => ({
-        header: header.title,
-        key: header.title.trim().replace(/[\s.]+/g, "_"),
-        width: header.width,
-      }));
+      for (const [type, typeData] of Object.entries(groupedByType)) {
+        if (separateFiles) {
+            workbook = new ExcelJS.Workbook();
+        }
+        const parentFolderColumn = $("#parentFolder").val();
+        const parentFolder = typeData && typeData[0] && typeData[0][parentFolderColumn];
+        const worksheet = workbook.addWorksheet(type);  // Use 'type' as sheet name for clarity
 
-      const filters = this.filterService.getFilters();
-      const gender = filters.Gender && filters.Gender.length ? ` (${filters.Gender.map((gender) => (gender === "Male" ? "Gents" : "Ladies")).join(", ")})` : "";
-
-      this.addHeaderRow(worksheet, headers);
-      this.addTitleRow(worksheet, type, gender, parentFolder);
-      typeData.forEach((dataRow) => {
-        const currentRow = worksheet.addRow(dataRow);
-        const dataFormat = StorageService.currentRecord.format;
-        currentRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          const header = dataFormat[colNumber - 1];
-          cell.font = header.font;
-          cell.fill = header.fill;
-          cell.alignment = header.alignment;
-          cell.border = cell.border = {
-            top: { style: "thin" },
-            left: { style: "thin" },
-            bottom: { style: "thin" },
-            right: { style: "thin" },
-          };
-
-          if (header.numFmt) {
-            cell.numFmt = header.numFmt;
-          }
+        let headers = $("#selectColumns").val();
+        let selectedValue = $("#selectColumns").val();
+        const fileNameSelectValue = $("#downloadType").val();
+        if (selectedValue.includes("All")) {
+            headers = [];
+            $("#selectColumns option:not([value='All'])").each(function () {
+              if(this.value != fileNameSelectValue && this.value != parentFolderColumn)
+                headers.push(this.value);
+            });
+        }
+        headers = $.map(headers, function (key) {
+            var obj = $.grep(StorageService.currentRecord.headers, function (o) {
+                return o.data === key;
+            })[0];
+            return obj ? obj : null;
         });
-      });
 
-      const fileBuffer = await this.getExcelFileBuffer(workbook, type, gender, parentFolder);
-      const departmentFolder = zip.folder(parentFolder);
-      departmentFolder.file(fileBuffer.filename, fileBuffer.buffer);
+        worksheet.columns = headers.map((header) => ({
+            header: header.title,
+            key: header.title.trim().replace(/[\s.]+/g, "_"),
+            width: header.width,
+        }));
+
+        this.addHeaderRow(worksheet, headers);
+        this.addTitleRow(worksheet, type, "", parentFolder);
+        const dataFormat = StorageService.currentRecord.format;
+        typeData.forEach((dataRow) => {
+            const currentRow = worksheet.addRow(dataRow);
+            currentRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+                const header = dataFormat[colNumber - 1];
+                cell.font = header.font;
+                cell.fill = header.fill;
+                cell.alignment = header.alignment;
+                cell.border = cell.border = {
+                            top: { style: "thin" },
+                            left: { style: "thin" },
+                            bottom: { style: "thin" },
+                            right: { style: "thin" },
+                          };
+                if (header.numFmt) {
+                    cell.numFmt = header.numFmt;
+                }
+            });
+        });
+        if (separateFiles) {
+            const fileBuffer = await this.getExcelFileBuffer(workbook, type, parentFolder);
+            const departmentFolder = zip.folder(parentFolder);
+            departmentFolder.file(fileBuffer.filename, fileBuffer.buffer);
+        }
+      }
+
+    if (!separateFiles) {
+        const fileBuffer = await this.getExcelFileBuffer(workbook,  "", "");
+        const blob = new Blob([fileBuffer.buffer], {
+            type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        });
+        saveAs(blob, fileBuffer.filename);
+    } else {
+        zip.generateAsync({ type: "blob" }).then(function (content) {
+            const dateString = new Date().toISOString().split("T")[0].replace(/-/g, "");
+            saveAs(content, `output-${dateString}.zip`);
+        });
     }
-    zip.generateAsync({ type: "blob" }).then(function (content) {
+
+
+  }
+
+  async getExcelFileBuffer(workbook, type, parentFolder) {
+      const buffer = await workbook.xlsx.writeBuffer();
       const dateString = new Date().toISOString().split("T")[0].replace(/-/g, "");
-      saveAs(content, `output-${dateString}.zip`);
-    });
+      let filename = "";
+      filename += $("#fileNameValue").val() ? $("#fileNameValue").val().trim() + "-" : "";
+      filename += type ? type.replace(/ /g, "-").trim() + "-" : "";
+      filename += `${dateString}.xlsx`;
+      return {
+          filename,
+          buffer,
+      };
   }
-
-  async getExcelFileBuffer(workbook, type, gender, parentFolder) {
-    const buffer = await workbook.xlsx.writeBuffer();
-    const dateString = new Date().toISOString().split("T")[0].replace(/-/g, "");
-    let filename = "";
-    filename = filename + ($("#fileNameValue").val() ? $("#fileNameValue").val().trim() + "-" : "");
-    filename = filename + (type ? type.replace(" ", "-").trim() + "-" : "");
-    filename = filename + (gender ? gender.trim() + "-" : "");
-    filename = filename + `${dateString}.xlsx`;
-    return {
-      filename,
-      buffer,
-    };
-  }
-
-  async downloadExcelFile(workbook, type, gender) {
+  async downloadExcelFile(workbook, type) {
     const buffer = await workbook.xlsx.writeBuffer();
     const dateString = new Date().toISOString().split("T")[0].replace(/-/g, "");
     const blob = new Blob([buffer], {
@@ -180,7 +195,6 @@ class DownloadService {
     });
     let filename = $("#fileNameValue").val() ? $("#fileNameValue").val().trim() + "-" : "";
     filename = filename + (type ? type.replace(" ", "-").trim() + "-" : "");
-    filename = filename + (gender ? gender.trim() + "-" : "");
     filename = filename + `${dateString}.xlsx`;
     saveAs(blob, filename);
   }

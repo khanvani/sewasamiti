@@ -50,6 +50,7 @@ class Controller {
       this.excelService
         .uploadAndProcessFile(event)
         .then(() => $("#fileNamesCombo").val(StorageService.currentFile).change())
+        .then(()=>$("#inputExcel").val(""))
         .catch((error) => console.error("Error processing Excel file", error));
     }
   }

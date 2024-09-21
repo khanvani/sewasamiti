@@ -1,5 +1,5 @@
 class TableService {
-  static MAIN_CONTENT_HEIGHT_OFFSET = 240;
+  static MAIN_CONTENT_HEIGHT_OFFSET = 300;
   static DEFAULT_PAGE_LENGTH = 25;
 
   constructor() {

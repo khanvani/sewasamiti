@@ -1,5 +1,5 @@
 class FilterService {
-  filterFields = ["Department", "SubDept", "Gender", "Status", "Center", "Area", "OutSide"];
+  filterFields = ["Department", "SubDept", "Gender", "Status", "Center", "Area", "OutStation"];
 
   constructor(storageService) {
     this.storageService = storageService;
@@ -16,7 +16,7 @@ class FilterService {
         this.filters[field] = new Set();
       });
       if (this.fillFilters(StorageService.currentRecord.data)) {
-        this.renderSelectBoxes("#filterModal .modal-body");
+        this.renderSelectBoxes("#filterModal");
         $(".selectpicker").selectpicker();
       }
     }
@@ -57,8 +57,7 @@ class FilterService {
 
         const selectHtml = `
             <div class="form-group">
-              <label for="filter-${field}">${field}</label>
-              <select id="filter-${field}" class="selectpicker form-control" multiple data-live-search="true">
+              <select id="filter-${field}" class="selectpicker form-control filterTrigger" multiple data-live-search="true" title="${field}">
                 ${options}
               </select>
             </div>
@@ -70,7 +69,7 @@ class FilterService {
   }
 
   filter() {
-    const data = StorageService.currentData[StorageService.currentFile][StorageService.currentSheet].data;
+    const data = this.storageService.getCurrentData().data;
     this.filters = {
       Department: $("#filter-Department").val(),
       SubDept: $("#filter-SubDept").val(),
@@ -78,10 +77,10 @@ class FilterService {
       Status: $("#filter-Status").val(),
       Center: $("#filter-Center").val(),
       Area: $("#filter-Area").val(),
-      OutSide: $("#filter-OutSide").val(),
+      OutSide: $("#filter-OutStation").val(),
     };
-    $("#filterModal").modal("hide");
-    return data.filter((item) => Object.entries(this.filters).every(([key, values]) => !values || !values.length || values.includes(item[key])));
+    StorageService.currentRecord.data = data.filter((item) => Object.entries(this.filters).every(([key, values]) => !values || !values.length || values.includes(item[key])));
+    return data;
   }
   clearFilter() {
     $("#filter-Department").val([]).selectpicker("refresh");
@@ -90,7 +89,7 @@ class FilterService {
     $("#filter-Status").val([]).selectpicker("refresh");
     $("#filter-Center").val([]).selectpicker("refresh");
     $("#filter-Center").val([]).selectpicker("refresh");
-    $("#filter-OutSide").val([]).selectpicker("refresh");
-    return StorageService.currentData[StorageService.currentFile][StorageService.currentSheet].data;
+    $("#filter-OutStation").val([]).selectpicker("refresh");
+    return this.storageService.getCurrentData();
   }
 }

@@ -1,51 +1,58 @@
 class StorageService {
-  static currentFile = "";
-  static currentSheet = "";
-  static currentData = {};
   static currentRecord = {};
-  static formMetadata = {};
 
   constructor() {
-    this.currentDataKey = "currentData";
-    this.formMetadataKey = "formMetadata";
     this.getCurrentData = this.getCurrentData.bind(this);
     this.setCurrentData = this.setCurrentData.bind(this);
-    this.setFormMetadata = this.setFormMetadata.bind(this);
-    this.getFormMetadata = this.getFormMetadata.bind(this);
     this.clear = this.clear.bind(this);
+    this.call = this.call.bind(this);
+    this.currentDataKey = "data";
     this.getCurrentData();
   }
 
   setCurrentData(data) {
     localStorage.setItem(this.currentDataKey, JSON.stringify(data));
   }
-  setFormMetadata(data) {
-    localStorage.setItem(this.formMetadataKey, JSON.stringify(data));
-  }
-
-  getFormMetadata() {
-    if (formMetadata) return formMetadata;
-    let dataJSON = localStorage.getItem(this.formMetadataKey);
-    dataJSON = dataJSON ? JSON.parse(dataJSON) : [];
-    return dataJSON;
-  }
-
-  getCurrentData() {
+ getCurrentData() {
     try {
       let dataJSON = localStorage.getItem(this.currentDataKey);
       dataJSON = dataJSON ? JSON.parse(dataJSON) : [];
-      if (Object.keys(StorageService.currentData).length <= 0) {
-        StorageService.currentFile = Object.keys(dataJSON)[0];
-        StorageService.currentSheet = Object.keys(dataJSON[StorageService.currentFile])[0];
-        StorageService.currentData = dataJSON;
-        StorageService.currentRecord = jQuery.extend(true, {}, StorageService.currentData[StorageService.currentFile][StorageService.currentSheet]);
+      StorageService.currentRecord = dataJSON;
+      if (Object.keys(dataJSON).length <= 0) {
+        return this.call().then((response) => {
+          StorageService.currentRecord = response;
+          return StorageService.currentRecord;
+        });
       }
-    } catch {
+
+      return StorageService.currentRecord;
+    } catch (error) {
       $("#noDataModal").modal("show");
+      return Promise.reject(error);
     }
   }
 
   clear() {
     localStorage.clear();
+    this.call();
+  }
+ call() {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: "https://run.mocky.io/v3/a12f0adf-bd12-4552-a0c8-16d2c059f90d",
+        type: "POST",
+        async: false, // Set async to false for synchronous request
+        dataType: "json",
+        success: (response) => {
+          StorageService.currentRecord = response;
+          this.setCurrentData(response);
+          resolve(response); // Resolve the promise with the response data
+        },
+        error: (xhr, status, error) => {
+          console.error("Error in fetching data:", error);
+          reject(error); // Reject the promise in case of error
+        }
+      });
+    });
   }
 }

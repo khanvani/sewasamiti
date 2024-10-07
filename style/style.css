@@ -261,6 +261,7 @@ table.dataTable thead .sorting_desc {
   border: 2px solid #8b0002;
   animation: blinkEffect 1s linear infinite;
 }
+
 /* Mobile-specific styles */
 @media only screen and (max-width: 600px) {
   .dataTables_filter {
@@ -275,4 +276,17 @@ table.dataTable thead .sorting_desc {
          margin: 0px;
          padding: 0px;
   }
+}
+
+#filterModal
+{
+    display: inline-flex;
+    float: left;
+    float:right;
+    .form-group{
+padding: 0px 10px;
+width:150px;
+margin-bottom:0px;
+margin-top:9px;
+}
 }

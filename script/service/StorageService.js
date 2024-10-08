@@ -39,7 +39,7 @@ class StorageService {
     return new Promise((resolve, reject) => {
       const apiKey = localStorage.getItem('apiKey');
       $.ajax({
-        url: "https://ahujaenterprise.com/rssba/query-desk.php",
+        url: "https://ahujaenterprise.com/sewasamiti/query-desk.php",
         type: "POST",
         async: false, // Set async to false for synchronous request
         dataType: "json",

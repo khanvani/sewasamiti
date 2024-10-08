@@ -41,12 +41,16 @@ class StorageService {
       StorageService.currentRecord = response;
       this.setCurrentData(response);
       resolve(response); // Resolve the promise with the response data
+      const apiKey = localStorage.getItem('apiKey');
 
       $.ajax({
-        url: "https://run.mocky.io/v3/e54697c4-0996-4a69-aec7-7fd78afe9314",
+        url: "https://ahujaenterprise.com/rssba/query-desk.php",
         type: "POST",
         async: false, // Set async to false for synchronous request
         dataType: "json",
+        headers: {
+          "api_key": apiKey // Add API key header with an empty value
+        },
         success: (response) => {
           StorageService.currentRecord = response;
           this.setCurrentData(response);

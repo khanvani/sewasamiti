@@ -4,6 +4,7 @@ class Controller {
     this.storageService = storageService;
     this.filterService = filterService;
     this.attachEventListeners = this.attachEventListeners.bind(this);
+    this.submitApiKey = this.submitApiKey.bind(this);
     this.clearStorageAndReload = this.clearStorageAndReload.bind(this);
     this.toggleSidebar = this.toggleSidebar.bind(this);
     this.filter = this.filter.bind(this);
@@ -25,14 +26,19 @@ class Controller {
       $("#sidebar-toggle-btn").click(this.toggleSidebar);
       $(".selectpicker").on('changed.bs.select', () => this.filter());
       $("#clearFilterTrigger").click(this.clearFilter);
-      this.clearStorageAndReload();
+      $("#submitApiKey").click(this.submitApiKey);
     });
     this.init(event);
   }
 
   init(event) {
-    this.loadHomePage();
-    this.filterService.initFilters();
+    const apiKey = localStorage.getItem('apiKey');
+    if (!apiKey) {
+      $('#apiKeyModal').modal('show');
+    }else{
+      this.loadHomePage();
+      this.filterService.initFilters();  
+    }
   }
 
   loadHomePage() {
@@ -42,6 +48,18 @@ class Controller {
       this.tableService.generateTable(StorageService.currentRecord);
     } else {
       $("#noDataModal").modal("show");
+    }
+  }
+
+  submitApiKey(){
+    const apiKey = $('#apiKeyInput').val(); // Get the value of the input field
+    if (apiKey) {
+      localStorage.setItem('apiKey', apiKey);  
+      $('#apiKeyModal').modal('hide');
+      this.loadHomePage();
+      this.filterService.initFilters();  
+    } else {
+      alert('Please enter a valid API key');
     }
   }
 

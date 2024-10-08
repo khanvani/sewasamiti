@@ -2,7 +2,6 @@
 body {
   background-color: #f4f7f6;
   margin: 0;
-  padding-top: 60px; /* Give space for the top menu */
   * {
     font-size: 12px !important;
   }
@@ -94,7 +93,7 @@ th {
 
 /* Top Menu adjusted for clarity and positioning */
 #topMenu {
-  position: fixed; /* Fixed at the top */
+  display: flow-root;
   top: 0; /* Align to top */
   right: 0; /* Align to right */
   z-index: 10; /* Ensure it's above other content */
@@ -106,7 +105,7 @@ th {
 }
 
 .custom-card {
-  margin-top: 70px;
+  margin-top: 10px;
   display: none;
 }
 

@@ -34,7 +34,6 @@ class StorageService {
 
   clear() {
     localStorage.clear();
-    this.call();
   }
  call() {
     return new Promise((resolve, reject) => {

@@ -32,12 +32,12 @@ class Controller {
   }
 
   init(event) {
+    this.filterService.initFilters();  
     const apiKey = localStorage.getItem('apiKey');
     if (!apiKey) {
       $('#apiKeyModal').modal('show');
     }else{
       this.loadHomePage();
-      this.filterService.initFilters();  
     }
   }
 
@@ -65,8 +65,7 @@ class Controller {
 
   clearStorageAndReload() {
     this.storageService.clear();
-    $("#clearStorageModal").modal("hide");
-    this.tableService.generateTable(this.storageService.getCurrentData());
+    location.reload();
   }
 
   toggleSidebar() {
@@ -95,7 +94,6 @@ class Controller {
     this.pivotService.pivotByMaleFemale();
   }
 }
-
 const storageService = new StorageService();
 const tableService = new TableService();
 const filterService = new FilterService(storageService);

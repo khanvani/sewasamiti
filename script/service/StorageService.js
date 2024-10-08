@@ -44,6 +44,7 @@ class StorageService {
         async: false, // Set async to false for synchronous request
         dataType: "json",
         success: (response) => {
+          response = ;
           StorageService.currentRecord = response;
           this.setCurrentData(response);
           resolve(response); // Resolve the promise with the response data

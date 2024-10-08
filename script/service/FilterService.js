@@ -1,5 +1,5 @@
 class FilterService {
-  filterFields = ["Department", "SubDept", "Gender", "Status", "Center", "Area", "OutStation"];
+  filterFields = ["Department", "SubDept", "Gender", "Status", "Center", "Area", "OutStation", "Annotation_ASP_2024", "New_Status"];
 
   constructor(storageService) {
     this.storageService = storageService;
@@ -78,6 +78,8 @@ class FilterService {
       Center: $("#filter-Center").val(),
       Area: $("#filter-Area").val(),
       OutSide: $("#filter-OutStation").val(),
+      Annotation_ASP_2024: $("#filter-Annotation_ASP_2024").val(),
+      New_Status: $("#filter-New_Status").val(),
     };
     StorageService.currentRecord.data = data.filter((item) => Object.entries(this.filters).every(([key, values]) => !values || !values.length || values.includes(item[key])));
     return data;
@@ -90,6 +92,8 @@ class FilterService {
     $("#filter-Center").val([]).selectpicker("refresh");
     $("#filter-Center").val([]).selectpicker("refresh");
     $("#filter-OutStation").val([]).selectpicker("refresh");
+    $("#filter-Annotation_ASP_2024").val([]).selectpicker("refresh");
+    $("#filter-New_Status").val([]).selectpicker("refresh");
     return this.storageService.getCurrentData();
   }
 }

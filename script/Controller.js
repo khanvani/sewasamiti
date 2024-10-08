@@ -25,6 +25,7 @@ class Controller {
       $("#sidebar-toggle-btn").click(this.toggleSidebar);
       $(".selectpicker").on('changed.bs.select', () => this.filter());
       $("#clearFilterTrigger").click(this.clearFilter);
+      this.clearStorageAndReload();
     });
     this.init(event);
   }
@@ -47,13 +48,7 @@ class Controller {
   clearStorageAndReload() {
     this.storageService.clear();
     $("#clearStorageModal").modal("hide");
-    this.storageService.getCurrentData().then((data) => {
-
-      this.tableService.generateTable(data);
-    }).catch((error) => {
-      console.error("Error:", error);
-    });
-
+    this.tableService.generateTable(this.storageService.getCurrentData());
   }
 
   toggleSidebar() {
